@@ -30,7 +30,6 @@ import frc.robot.Constants.AutoConstants;
 import frc.robot.Constants.DriveConstants;
 import frc.robot.Constants.OIConstants;
 import frc.robot.subsystems.DriveSubsystem;
-import frc.robot.subsystems.FlywheelSubsystem;
 import java.util.List;
 import java.util.function.DoubleSupplier;
 
@@ -48,7 +47,7 @@ public class Robot extends TimedRobot {
   private final DriveSubsystem m_robotDrive = new DriveSubsystem();
   private boolean m_fieldRelative = true;
 
-  private final FlywheelSubsystem m_flywheel = new FlywheelSubsystem();
+  // private final FlywheelSubsystem m_flywheel = new FlywheelSubsystem(); TODO add back
 
   private double m_lastTime = 0;
 
@@ -88,19 +87,19 @@ public class Robot extends TimedRobot {
     m_driverController.x().whileTrue(m_robotDrive.setXCommand());
     m_driverController.y().onTrue(new InstantCommand(() -> m_fieldRelative = !m_fieldRelative));
 
-    m_driverController.povUp().whileTrue(m_flywheel.setRPMCommand(5676 / 2));
+    //  m_driverController.povUp().whileTrue(m_flywheel.setRPMCommand(5676 / 2)); TODO add back
   }
 
   /** Use this method to define default commands for subsystems. */
   private void configureDefaultCommands() {
     m_robotDrive.setDefaultCommand(
         m_robotDrive.driveCommand(
-            adjustJoystick(m_driverController::getLeftY, true),
-            adjustJoystick(m_driverController::getLeftX, true),
-            adjustJoystick(m_driverController::getRightX, true),
+            adjustJoystick(() -> .5 * m_driverController.getLeftY(), true),
+            adjustJoystick(() -> .5 * m_driverController.getLeftX(), true),
+            adjustJoystick(() -> .5 * m_driverController.getRightX(), true),
             () -> m_fieldRelative));
 
-    m_flywheel.setDefaultCommand(m_flywheel.stopCommand());
+    //  m_flywheel.setDefaultCommand(m_flywheel.stopCommand()); TODO add back
   }
 
   /**
