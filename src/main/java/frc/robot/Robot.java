@@ -27,6 +27,7 @@ import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.CommandScheduler;
 import edu.wpi.first.wpilibj2.command.InstantCommand;
 import edu.wpi.first.wpilibj2.command.SwerveControllerCommand;
+import edu.wpi.first.wpilibj2.command.button.CommandJoystick;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import edu.wpi.first.wpilibj2.command.button.JoystickButton;
 import frc.robot.Constants.AutoConstants;
@@ -61,6 +62,7 @@ public class Robot extends TimedRobot {
   // The driver's controller
   CommandXboxController m_driverController =
       new CommandXboxController(OIConstants.kDriverControllerPort);
+  CommandJoystick m_joystick = new CommandJoystick(OIConstants.kJoystickPort);
 
   public Robot() {
     if (isSimulation()) {
@@ -104,15 +106,26 @@ public class Robot extends TimedRobot {
     m_robotDrive.setDefaultCommand(
         m_robotDrive.driveCommand(
             adjustJoystick(
-                m_driverController::getLeftY,
+                m_joystick::getY,
                 () -> m_speedMultiplier,
                 () -> m_invertControls || !m_fieldRelative),
             adjustJoystick(
-                m_driverController::getLeftX,
+                m_joystick::getX,
                 () -> m_speedMultiplier,
                 () -> m_invertControls || !m_fieldRelative),
-            adjustJoystick(m_driverController::getRightX, () -> m_speedMultiplier, () -> true),
+            adjustJoystick(m_joystick::getTwist, () -> m_speedMultiplier, () -> true),
             () -> m_fieldRelative));
+    // m_robotDrive.driveCommand(
+    //   adjustJoystick(
+    //       m_driverController::getLeftY,
+    //       () -> m_speedMultiplier,
+    //       () -> m_invertControls || !m_fieldRelative),
+    //   adjustJoystick(
+    //       m_driverController::getLeftX,
+    //       () -> m_speedMultiplier,
+    //       () -> m_invertControls || !m_fieldRelative),
+    //   adjustJoystick(m_driverController::getRightX, () -> m_speedMultiplier, () -> true),
+    //   // () -> m_fieldRelative));
   }
 
   /**
