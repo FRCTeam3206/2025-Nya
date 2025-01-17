@@ -24,6 +24,8 @@ import edu.wpi.first.wpilibj.DriverStation.Alliance;
 import edu.wpi.first.wpilibj.TimedRobot;
 import edu.wpi.first.wpilibj.Timer;
 import edu.wpi.first.wpilibj.XboxController;
+import edu.wpi.first.wpilibj.smartdashboard.SendableChooser;
+import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.CommandScheduler;
 import edu.wpi.first.wpilibj2.command.InstantCommand;
@@ -63,6 +65,8 @@ public class Robot extends TimedRobot {
   CommandXboxController m_driverController =
       new CommandXboxController(OIConstants.kDriverControllerPort);
 
+  private SendableChooser<Command> m_autonChooser = new SendableChooser<Command>();
+
   public Robot() {
     if (isSimulation()) {
       DriverStation.silenceJoystickConnectionWarning(true);
@@ -71,6 +75,7 @@ public class Robot extends TimedRobot {
 
     DataLogManager.start();
     Epilogue.bind(this);
+    autons();
   }
 
   /**
@@ -116,54 +121,63 @@ public class Robot extends TimedRobot {
             () -> m_fieldRelative));
   }
 
+  public void autons() {
+    // SmartDashboard.putNumber("Drive Time", 0.0);
+    // SmartDashboard.putNumber("Percent Speed", 0.0);
+    m_autonChooser.setDefaultOption("drive distance", 
+    m_robotDrive.driveCommand(()-> 1/DriveConstants.kMaxSpeedMetersPerSecond,
+    // SmartDashboard.getNumber("Percent Speed", 0),
+    ()->0,()->0,()->false).withTimeout(1));
+  }
   /**
    * Use this to pass the autonomous command to the main {@link Robot} class.
    *
    * @return the command to run in autonomous
    */
   public Command getAutonomousCommand() {
+    return m_autonChooser.getSelected();
     // Create config for trajectory
-    TrajectoryConfig config =
-        new TrajectoryConfig(
-                AutoConstants.kMaxSpeedMetersPerSecond,
-                AutoConstants.kMaxAccelerationMetersPerSecondSquared)
-            // Add kinematics to ensure max speed is actually obeyed
-            .setKinematics(DriveConstants.kDriveKinematics);
+    // TrajectoryConfig config =
+    //     new TrajectoryConfig(
+    //             AutoConstants.kMaxSpeedMetersPerSecond,
+    //             AutoConstants.kMaxAccelerationMetersPerSecondSquared)
+    //         // Add kinematics to ensure max speed is actually obeyed
+    //         .setKinematics(DriveConstants.kDriveKinematics);
 
     // An example trajectory to follow. All units in meters.
-    Trajectory exampleTrajectory =
-        TrajectoryGenerator.generateTrajectory(
-            // Start at the origin facing the +X direction
-            new Pose2d(0, 0, new Rotation2d(0)),
-            // Pass through these two interior waypoints, making an 's' curve path
-            List.of(new Translation2d(1, 1), new Translation2d(2, -1)),
-            // End 3 meters straight ahead of where we started, facing forward
-            new Pose2d(3, 0, new Rotation2d(0)),
-            config);
+    // Trajectory exampleTrajectory =
+    //     TrajectoryGenerator.generateTrajectory(
+    //         // Start at the origin facing the +X direction
+    //         new Pose2d(0, 0, new Rotation2d(0)),
+    //         // Pass through these two interior waypoints, making an 's' curve path
+    //         List.of(new Translation2d(1, 1), new Translation2d(2, -1)),
+    //         // End 3 meters straight ahead of where we started, facing forward
+    //         new Pose2d(3, 0, new Rotation2d(0)),
+    //         config);
 
-    var thetaController =
-        new ProfiledPIDController(
-            AutoConstants.kPThetaController, 0, 0, AutoConstants.kThetaControllerConstraints);
-    thetaController.enableContinuousInput(-Math.PI, Math.PI);
+    // var thetaController =
+    //     new ProfiledPIDController(
+    //         AutoConstants.kPThetaController, 0, 0, AutoConstants.kThetaControllerConstraints);
+    // thetaController.enableContinuousInput(-Math.PI, Math.PI);
 
-    SwerveControllerCommand swerveControllerCommand =
-        new SwerveControllerCommand(
-            exampleTrajectory,
-            m_robotDrive::getPose, // Functional interface to feed supplier
-            DriveConstants.kDriveKinematics,
+    // SwerveControllerCommand swerveControllerCommand =
+    //     new SwerveControllerCommand(
+    //         exampleTrajectory,
+    //         m_robotDrive::getPose, // Functional interface to feed supplier
+    //         DriveConstants.kDriveKinematics,
 
-            // Position controllers
-            new PIDController(AutoConstants.kPXController, 0, 0),
-            new PIDController(AutoConstants.kPYController, 0, 0),
-            thetaController,
-            m_robotDrive::setModuleStates,
-            m_robotDrive);
+    //         // Position controllers
+    //         new PIDController(AutoConstants.kPXController, 0, 0),
+    //         new PIDController(AutoConstants.kPYController, 0, 0),
+    //         thetaController,
+    //         m_robotDrive::setModuleStates,
+    //         m_robotDrive);
 
-    // Reset odometry to the starting pose of the trajectory.
-    m_robotDrive.resetOdometry(exampleTrajectory.getInitialPose());
+    // // Reset odometry to the starting pose of the trajectory.
+    // m_robotDrive.resetOdometry(exampleTrajectory.getInitialPose());
 
-    // Run path following command, then stop at the end.
-    return swerveControllerCommand.andThen(() -> m_robotDrive.drive(0, 0, 0, false));
+    // // Run path following command, then stop at the end.
+    // return swerveControllerCommand.andThen(() -> m_robotDrive.drive(0, 0, 0, false));
   }
 
   /**
