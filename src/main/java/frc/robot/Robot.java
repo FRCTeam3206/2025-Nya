@@ -54,7 +54,8 @@ public class Robot extends TimedRobot {
   private final DriveSubsystem m_robotDrive = new DriveSubsystem();
   private boolean m_fieldRelative = true;
   private boolean m_invertControls = true;
-  private double m_speedMultiplier = 0.5;
+  private double m_translationalSpeedMultiplier = 0.5;
+  private double m_rotationalSpeedMultiplier = 0.25;
 
   private double m_lastTime = 0;
   private double m_loopTime = 0;
@@ -111,13 +112,13 @@ public class Robot extends TimedRobot {
         m_robotDrive.driveCommand(
             adjustJoystick(
                 m_driverController::getLeftY,
-                () -> m_speedMultiplier,
+                () -> m_translationalSpeedMultiplier,
                 () -> m_invertControls || !m_fieldRelative),
             adjustJoystick(
                 m_driverController::getLeftX,
-                () -> m_speedMultiplier,
+                () -> m_translationalSpeedMultiplier,
                 () -> m_invertControls || !m_fieldRelative),
-            adjustJoystick(m_driverController::getRightX, () -> m_speedMultiplier, () -> true),
+            adjustJoystick(m_driverController::getRightX, () -> m_rotationalSpeedMultiplier, () -> true),
             () -> m_fieldRelative));
   }
 
@@ -125,9 +126,9 @@ public class Robot extends TimedRobot {
     // SmartDashboard.putNumber("Drive Time", 0.0);
     // SmartDashboard.putNumber("Percent Speed", 0.0);
     m_autonChooser.setDefaultOption("drive distance", 
-    m_robotDrive.driveCommand(()-> 1/DriveConstants.kMaxSpeedMetersPerSecond,
+    m_robotDrive.driveCommand(()-> 2/DriveConstants.kMaxSpeedMetersPerSecond,
     // SmartDashboard.getNumber("Percent Speed", 0),
-    ()->0,()->0,()->false).withTimeout(1));
+    ()->0,()->0,()->false).withTimeout(2));
   }
   /**
    * Use this to pass the autonomous command to the main {@link Robot} class.
