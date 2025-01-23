@@ -126,7 +126,7 @@ public class Robot extends TimedRobot {
     // SmartDashboard.putNumber("Drive Time", 0.0);
     // SmartDashboard.putNumber("Percent Speed", 0.0);
     m_autonChooser.setDefaultOption("drive distance", 
-    m_robotDrive.driveCommand(()-> 2/DriveConstants.kMaxSpeedMetersPerSecond,
+    m_robotDrive.driveCommand(()-> 1/DriveConstants.kMaxSpeedMetersPerSecond,
     // SmartDashboard.getNumber("Percent Speed", 0),
     ()->0,()->0,()->false).withTimeout(2));
   }
