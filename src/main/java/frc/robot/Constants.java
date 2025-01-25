@@ -20,9 +20,6 @@ import edu.wpi.first.math.util.Units;
  * constants are needed, to reduce verbosity.
  */
 public final class Constants {
-  /*NORMAL or DEBUG
-  lets you log more things but only in debug mode, check Debug.java*/
-  public static final String runtimeMode = "DEBUG";
   public static final class DriveConstants {
     // Driving Parameters - Note that these are not the maximum capable speeds of
     // the robot, rather the allowed maximum speeds
@@ -110,5 +107,25 @@ public final class Constants {
 
   public static final class NeoMotorConstants {
     public static final double kFreeSpeedRpm = 5676;
+  }
+  public static final class ElevatorConstants {
+    public static final int kLeftPort = 24911223;
+    public static final int kRightPort = 10000000;
+    /*between -1 and 1
+     * https://github.wpilib.org/allwpilib/docs/release/java/edu/wpi/first/wpilibj/motorcontrol/MotorController.html#set(double)
+     * Make it negative to reverse it 
+    */
+    public static final double kMotorSpeed = 0.1;
+    /*weight in kg for the simulation, idk what counts as part of the elevator and what doesnt
+    Fatass*/
+    public static final int kWeight = 100;
+    //voltage for the simulation
+    public static final double kVoltage = 1;
+    //I dont fucking know how many motors are in the gearbox???? stupid-ass simulation
+    public static final int kMotorsInGearbox = 2;
+    //both in meters
+    public static final int kBottomHeight = 0;
+    public static final int kTopHeight = 0;
+
   }
 }
