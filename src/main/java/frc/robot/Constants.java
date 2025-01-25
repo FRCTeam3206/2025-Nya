@@ -22,7 +22,7 @@ import edu.wpi.first.math.util.Units;
 public final class Constants {
   /*NORMAL or DEBUG
   lets you log more things but only in debug mode, check Debug.java*/
-  public static final String runtimeMode = "NORMAL";
+  public static final String runtimeMode = "DEBUG";
   public static final class DriveConstants {
     // Driving Parameters - Note that these are not the maximum capable speeds of
     // the robot, rather the allowed maximum speeds
