@@ -263,7 +263,7 @@ public class Robot extends TimedRobot {
   /** This function is called periodically during operator control. */
   @Override
   public void teleopPeriodic() {
-    m_elevator.reachGoal(m_driverController.getRightX());
+    m_elevator.reachGoal(m_driverController.getRawAxis(2));
   }
 
   @Override

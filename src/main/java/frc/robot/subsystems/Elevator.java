@@ -23,12 +23,12 @@ import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 
 public class Elevator implements AutoCloseable {
   // This gearbox represents a gearbox containing 4 Vex 775pro motors.
-  private final DCMotor m_elevatorGearbox = DCMotor.getVex775Pro(4);
+  private final DCMotor m_elevatorGearbox = DCMotor.getNEO(2);
 
   // Standard classes for controlling our elevator
   private final ProfiledPIDController m_controller =
       new ProfiledPIDController(
-          5,
+          10,
           0,
           0,
           new TrapezoidProfile.Constraints(2.45, 2.45));
@@ -43,11 +43,12 @@ public class Elevator implements AutoCloseable {
   private final PWMSparkMax m_motor = new PWMSparkMax(0);
 
   // Simulation classes help us simulate what's going on, including gravity.
+  // Tentative values for all from CAD. drumRadiusMeters/minmax height is off.
   private final ElevatorSim m_elevatorSim =
       new ElevatorSim(
           m_elevatorGearbox,
-          10,
-          4,
+          5,
+          15.87,
           0.0508,
           0,
           1.25,
