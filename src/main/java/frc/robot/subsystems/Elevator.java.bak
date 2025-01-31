@@ -65,7 +65,7 @@ public class Elevator extends SubsystemBase {
       // uhuhuhuh i am the best and youre the worst i am the best and youre the uh uhuhh i wanna go
       // home  i wanna go home i keep hearin ght the voices inside my head i wanna go home then
       // finish the job!!!!!
-      // look up ena temptation stairway
+      // look up ena auction day
       motor.stopMotor();
     }
   }

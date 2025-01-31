@@ -20,10 +20,12 @@ import edu.wpi.first.wpilibj.smartdashboard.Mechanism2d;
 import edu.wpi.first.wpilibj.smartdashboard.MechanismLigament2d;
 import edu.wpi.first.wpilibj.smartdashboard.MechanismRoot2d;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
+import frc.robot.Constants.ElevatorConstants;
 
 public class Elevator implements AutoCloseable {
   // This gearbox represents a gearbox containing 4 Vex 775pro motors.
-  private final DCMotor m_elevatorGearbox = DCMotor.getVex775Pro(4);
+  private final DCMotor m_elevatorGearbox =
+  DCMotor.getVex775Pro(ElevatorConstants.Motor.kHowManyInGearbox);
 
   // Standard classes for controlling our elevator
   private final ProfiledPIDController m_controller =
@@ -31,43 +33,61 @@ public class Elevator implements AutoCloseable {
           5,
           0,
           0,
-          new TrapezoidProfile.Constraints(2.45, 2.45));
+          new TrapezoidProfile.Constraints(
+            ElevatorConstants.kMaxVelocity, 
+            ElevatorConstants.kMaxVelocity
+          )
+        );
   ElevatorFeedforward m_feedforward =
       new ElevatorFeedforward(
           0,
           0.762,
           0.762,
-          0);
+          0
+          );
   private final Encoder m_encoder =
-      new Encoder(0, 1);
+      new Encoder(
+        ElevatorConstants.Encoder.kAChannel, 
+        ElevatorConstants.Encoder.kBChannel
+      );
   private final PWMSparkMax m_motor = new PWMSparkMax(0);
 
   // Simulation classes help us simulate what's going on, including gravity.
   private final ElevatorSim m_elevatorSim =
       new ElevatorSim(
           m_elevatorGearbox,
-          10,
-          4,
-          0.0508,
-          0,
-          1.25,
+          ElevatorConstants.Measurements.kGearing,
+          ElevatorConstants.Measurements.kWeight,
+          ElevatorConstants.Measurements.kDrumRadius,
+          ElevatorConstants.Measurements.kBottomHeight,
+          ElevatorConstants.Measurements.kTopHeight,
           true,
-          0,
-          0.01,
-          0.0);
+          ElevatorConstants.Measurements.kBottomHeight,
+          ElevatorConstants.Measurements.kStandardDeviation
+        );
+        //Dude... fuck; yes...
   private final EncoderSim m_encoderSim = new EncoderSim(m_encoder);
   private final PWMSim m_motorSim = new PWMSim(m_motor);
 
   // Create a Mechanism2d visualization of the elevator
-  private final Mechanism2d m_mech2d = new Mechanism2d(20, 50);
-  private final MechanismRoot2d m_mech2dRoot = m_mech2d.getRoot("Elevator Root", 10, 0);
+  private final Mechanism2d m_mech2d = 
+    new Mechanism2d(
+      ElevatorConstants.Mechanism2d.kWidth,
+      ElevatorConstants.Mechanism2d.kHeight
+      );
+  private final MechanismRoot2d m_mech2dRoot = 
+  m_mech2d.getRoot(
+    "Elevator Root", 
+    ElevatorConstants.Mechanism2d.kXDistance,
+    ElevatorConstants.Mechanism2d.kYDistance
+  );
   private final MechanismLigament2d m_elevatorMech2d =
       m_mech2dRoot.append(
           new MechanismLigament2d("Elevator", m_elevatorSim.getPositionMeters(), 90));
 
   /** Subsystem constructor. */
   public Elevator() {
-    m_encoder.setDistancePerPulse(2.0 * Math.PI * 0.0508 / 4096);
+    m_encoder.setDistancePerPulse(ElevatorConstants.Encoder.kDistancePerPulse);
 
     // Publish Mechanism2d to SmartDashboard
     // To view the Elevator visualization, select Network Tables -> SmartDashboard -> Elevator Sim
@@ -81,7 +101,7 @@ public class Elevator implements AutoCloseable {
     m_elevatorSim.setInput(m_motorSim.getSpeed() * RobotController.getBatteryVoltage());
 
     // Next, we update it. The standard loop time is 20ms.
-    m_elevatorSim.update(0.020);
+    m_elevatorSim.update(ElevatorConstants.kUpdateFrequency);
 
     // Finally, we set our simulated encoder's readings and simulated battery voltage
     m_encoderSim.setDistance(m_elevatorSim.getPositionMeters());
@@ -108,6 +128,7 @@ public class Elevator implements AutoCloseable {
   public void stop() {
     m_controller.setGoal(0.0);
     m_motor.set(0.0);
+    m_motor.stopMotor();
   }
 
   /** Update telemetry, including the mechanism visualization. */
