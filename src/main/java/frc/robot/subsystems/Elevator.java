@@ -1,76 +1,125 @@
+// Copyright (c) FIRST and other WPILib contributors.
+// Open Source Software; you can modify and/or share it under the terms of
+// the WPILib BSD license file in the root directory of this project.
+
 package frc.robot.subsystems;
 
-// idk what motor were gonna use im just gonna guess spark cause I Dont Know What That Is
-import edu.wpi.first.math.system.LinearSystem;
+import edu.wpi.first.math.controller.ElevatorFeedforward;
+import edu.wpi.first.math.controller.ProfiledPIDController;
 import edu.wpi.first.math.system.plant.DCMotor;
-import edu.wpi.first.math.system.plant.LinearSystemId;
-import edu.wpi.first.wpilibj.motorcontrol.Spark;
+import edu.wpi.first.math.trajectory.TrapezoidProfile;
+import edu.wpi.first.wpilibj.Encoder;
+import edu.wpi.first.wpilibj.RobotController;
+import edu.wpi.first.wpilibj.motorcontrol.PWMSparkMax;
+import edu.wpi.first.wpilibj.simulation.BatterySim;
 import edu.wpi.first.wpilibj.simulation.ElevatorSim;
-import edu.wpi.first.wpilibj2.command.SubsystemBase;
-import frc.robot.Constants;
+import edu.wpi.first.wpilibj.simulation.EncoderSim;
+import edu.wpi.first.wpilibj.simulation.PWMSim;
+import edu.wpi.first.wpilibj.simulation.RoboRioSim;
+import edu.wpi.first.wpilibj.smartdashboard.Mechanism2d;
+import edu.wpi.first.wpilibj.smartdashboard.MechanismLigament2d;
+import edu.wpi.first.wpilibj.smartdashboard.MechanismRoot2d;
+import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 
-public class Elevator extends SubsystemBase {
-  // two motors they should move at the same time and speed but different directions
-  // I dont know what a spark motor is or if we have it im just gonna assume we have it
-  private final Spark leftMotor = new Spark(Constants.ElevatorConstants.kLeftPort);
-  private final Spark rightMotor = new Spark(Constants.ElevatorConstants.kRightPort);
-  // Simulation needs a dc motor for some reason
-  // i dont know what torque is so im gonna say 0
-  private final DCMotor dcMotor =
-      new DCMotor(
-          Constants.ElevatorConstants.kVoltage,
+public class Elevator implements AutoCloseable {
+  // This gearbox represents a gearbox containing 4 Vex 775pro motors.
+  private final DCMotor m_elevatorGearbox = DCMotor.getVex775Pro(4);
+
+  // Standard classes for controlling our elevator
+  private final ProfiledPIDController m_controller =
+      new ProfiledPIDController(
+          5,
           0,
           0,
+          new TrapezoidProfile.Constraints(2.45, 2.45));
+  ElevatorFeedforward m_feedforward =
+      new ElevatorFeedforward(
           0,
-          0,
-          Constants.ElevatorConstants.kMotorsInGearbox);
-  private final LinearSystem imaginaryElevator = LinearSystemId.createElevatorSystem(null, 0, 0, 0);
-  private final Spark[] motors = {leftMotor, rightMotor};
-  private final ElevatorSim simulated =
-      new ElevatorSim(
-          imaginaryElevator,
-          dcMotor,
-          Constants.ElevatorConstants.kBottomHeight,
-          Constants.ElevatorConstants.kTopHeight,
-          true,
-          // assuming it starts at the bottom
-          Constants.ElevatorConstants.kBottomHeight,
+          0.762,
+          0.762,
           0);
-  private final double speed = Constants.ElevatorConstants.kMotorSpeed;
+  private final Encoder m_encoder =
+      new Encoder(0, 1);
+  private final PWMSparkMax m_motor = new PWMSparkMax(0);
 
-  /*private final Odometry odometry = new Odometry<>(null, null, leftMotor, null);
-  imma do this later not yet*/
+  // Simulation classes help us simulate what's going on, including gravity.
+  private final ElevatorSim m_elevatorSim =
+      new ElevatorSim(
+          m_elevatorGearbox,
+          10,
+          4,
+          0.0508,
+          0,
+          1.25,
+          true,
+          0,
+          0.01,
+          0.0);
+  private final EncoderSim m_encoderSim = new EncoderSim(m_encoder);
+  private final PWMSim m_motorSim = new PWMSim(m_motor);
+
+  // Create a Mechanism2d visualization of the elevator
+  private final Mechanism2d m_mech2d = new Mechanism2d(20, 50);
+  private final MechanismRoot2d m_mech2dRoot = m_mech2d.getRoot("Elevator Root", 10, 0);
+  private final MechanismLigament2d m_elevatorMech2d =
+      m_mech2dRoot.append(
+          new MechanismLigament2d("Elevator", m_elevatorSim.getPositionMeters(), 90));
+
+  /** Subsystem constructor. */
   public Elevator() {
-    for (Spark motor : motors) {
-      motor.setVoltage(Constants.ElevatorConstants.kVoltage);
-    }
-    simulated.setInputVoltage(Constants.ElevatorConstants.kVoltage);
+    m_encoder.setDistancePerPulse(2.0 * Math.PI * 0.0508 / 4096);
+
+    // Publish Mechanism2d to SmartDashboard
+    // To view the Elevator visualization, select Network Tables -> SmartDashboard -> Elevator Sim
+    SmartDashboard.putData("Elevator Sim", m_mech2d);
   }
 
-  public void up() {
-    rightMotor.set(speed);
-    // Eat Sleep Fortnite Repeat
-    leftMotor.set(-speed);
+  /** Advance the simulation. */
+  public void simulationPeriodic() {
+    // In this method, we update our simulation of what our elevator is doing
+    // First, we set our "inputs" (voltages)
+    m_elevatorSim.setInput(m_motorSim.getSpeed() * RobotController.getBatteryVoltage());
+
+    // Next, we update it. The standard loop time is 20ms.
+    m_elevatorSim.update(0.020);
+
+    // Finally, we set our simulated encoder's readings and simulated battery voltage
+    m_encoderSim.setDistance(m_elevatorSim.getPositionMeters());
+    // SimBattery estimates loaded battery voltages
+    RoboRioSim.setVInVoltage(
+        BatterySim.calculateDefaultBatteryLoadedVoltage(m_elevatorSim.getCurrentDrawAmps()));
   }
 
-  public void down() {
-    rightMotor.set(-speed);
-    leftMotor.set(speed);
+  /**
+   * Run control loop to reach and maintain goal.
+   *
+   * @param goal the position to maintain
+   */
+  public void reachGoal(double goal) {
+    m_controller.setGoal(goal);
+
+    // With the setpoint value we run PID control like normal
+    double pidOutput = m_controller.calculate(m_encoder.getDistance());
+    double feedforwardOutput = m_feedforward.calculate(m_controller.getSetpoint().velocity);
+    m_motor.setVoltage(pidOutput + feedforwardOutput);
   }
 
+  /** Stop the control loop and motor output. */
   public void stop() {
-    for (Spark motor : motors) {
-      // uhuhuhuh i am the best and youre the worst i am the best and youre the uh uhuhh i wanna go
-      // home  i wanna go home i keep hearin ght the voices inside my head i wanna go home then
-      // finish the job!!!!!
-      // look up ena temptation stairway
-      motor.stopMotor();
-    }
+    m_controller.setGoal(0.0);
+    m_motor.set(0.0);
   }
 
-  public void periodic() {
-    if (simulated.hasHitLowerLimit() || simulated.hasHitUpperLimit()) {
-      stop();
-    }
+  /** Update telemetry, including the mechanism visualization. */
+  public void updateTelemetry() {
+    // Update elevator visualization with position
+    m_elevatorMech2d.setLength(m_encoder.getDistance());
+  }
+
+  @Override
+  public void close() {
+    m_encoder.close();
+    m_motor.close();
+    m_mech2d.close();
   }
 }

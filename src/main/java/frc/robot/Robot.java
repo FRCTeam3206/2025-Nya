@@ -34,6 +34,8 @@ import frc.robot.Constants.AutoConstants;
 import frc.robot.Constants.DriveConstants;
 import frc.robot.Constants.OIConstants;
 import frc.robot.subsystems.DriveSubsystem;
+import frc.robot.subsystems.Elevator;
+
 import java.util.List;
 import java.util.function.BooleanSupplier;
 import java.util.function.DoubleSupplier;
@@ -50,6 +52,7 @@ public class Robot extends TimedRobot {
 
   // The robot's subsystems
   private final DriveSubsystem m_robotDrive = new DriveSubsystem();
+  private final Elevator m_elevator = new Elevator();
   private boolean m_fieldRelative = true;
   private boolean m_invertControls = true;
   private double m_speedMultiplier = 0.5;
@@ -203,6 +206,7 @@ public class Robot extends TimedRobot {
     double now = Timer.getFPGATimestamp();
     m_loopTime = now - m_lastTime;
     m_lastTime = now;
+    m_elevator.updateTelemetry();
   }
 
   /** This function is called once each time the robot enters Disabled mode. */
@@ -258,7 +262,9 @@ public class Robot extends TimedRobot {
 
   /** This function is called periodically during operator control. */
   @Override
-  public void teleopPeriodic() {}
+  public void teleopPeriodic() {
+    m_elevator.reachGoal(m_driverController.getRightX());
+  }
 
   @Override
   public void testInit() {
@@ -274,7 +280,9 @@ public class Robot extends TimedRobot {
   public void simulationInit() {}
 
   @Override
-  public void simulationPeriodic() {}
+  public void simulationPeriodic() {
+    m_elevator.simulationPeriodic();
+  }
 
   public double getLoopTime() {
     return m_loopTime;
