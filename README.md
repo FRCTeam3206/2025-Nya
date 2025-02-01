@@ -14,6 +14,3 @@ The project is based on the Rev MaxSwere v2025.0.0 template with many additions:
 * SPARK MAX Firmware v25.0.0
 * REVLib v2025.0.0-beta-3
 * Studica v2025.1.1-beta-4
-
-### Note about the branch
-This controller-wrapper branch is something im working on to make it so you can have the same callbacks with joysticks and controller and all that cause i lowkey dont like it,...
